@@ -1,0 +1,11 @@
+{
+  "awsConfigPath": "/.aws/credentials",
+  "outputFormat": "json",
+  "region": "us-east-1",
+  "idpEntryUrl": "https://xxx.okta.com/home/amazon_aws/xxx",
+  "accounts": {
+    "staging": "aws-account-id",
+    "production": "aws-account-id"
+  },
+  "defaultAccount": "staging",
+}

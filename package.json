@@ -1,0 +1,24 @@
+{
+  "name": "@earnest/aws-sts",
+  "version": "1.0.0",
+  "description": "Module for the generation of AWS STS tokens via SAML authentication.",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"No tests :(\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meetearnest/aws-sts.git"
+  },
+  "keywords": [
+    "aws",
+    "sts",
+    "saml"
+  ],
+  "author": "Brian Romanko",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/meetearnest/aws-sts/issues"
+  },
+  "homepage": "https://github.com/meetearnest/aws-sts#readme"
+}
