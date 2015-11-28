@@ -3,7 +3,6 @@
 const ArgumentParser  = require('argparse').ArgumentParser;
 const pkg = require('../package.json');
 const co = require('co');
-const Nightmare = require('nightmare');
 const coinquirer = require('coinquirer');
 const xml2js = require('xml2js');
 const thunkify = require('thunkify');
@@ -20,10 +19,10 @@ const config = require('../cfg/config');
 
 co(function *() {
   console.log('Earnest AWS Token Generator\n'.green.bold);
+  let provider = require(`./src/providers/${config.provider}`);
 
-  let args = parseArgs();
-
-  let samlAssertion = yield login(args.username, args.password);
+  let args = parseArgs(provider.name);
+  let samlAssertion = yield provider.login(args.username, args.password, config);
   let role = yield selectRole(samlAssertion, args.role);
   let token = yield getToken(samlAssertion, args.account, role);
   let profileName = buildProfileName(role, args.account, args.profile);
@@ -43,17 +42,17 @@ co(function *() {
   });
 
 
-function parseArgs() {
+function parseArgs(providerName) {
   let parser = new ArgumentParser({
     addHelp: true,
     description: pkg.description,
     version: pkg.version
   });
   parser.addArgument(['--username'], {
-    help: 'Okta username (ex. user@domain.com)'
+    help: `${providerName} username (ex. user@domain.com)`
   });
   parser.addArgument(['--password'], {
-    help: 'Okta password'
+    help: `${providerName} password`
   });
   parser.addArgument(['--role'], {
     help: 'Name of SAML role to assume'
@@ -67,73 +66,6 @@ function parseArgs() {
     help: 'Profile name that the AWS credentials should be saved as. Defaults to the name of the account specified.'
   });
   return parser.parseArgs();
-}
-
-function *login(username, password) {
-  let spinner = new clui.Spinner('Logging in...');
-
-  let ci = new coinquirer();
-  username = username ? username : yield ci.prompt({
-    type: 'input',
-    message: 'Okta username (ex. user@meetearnest.com):'
-  });
-  password = password ? password : yield ci.prompt({
-    type: 'password',
-    message: 'Okta password:'
-  });
-
-  spinner.start();
-  let nightmare = Nightmare();
-
-  let hasError = yield nightmare
-    .useragent(pkg.description + ' v.' + pkg.version)
-    .goto(config.idpEntryUrl)
-    .type('input[name="username"]', username)
-    .type('input[name="password"]', password)
-    .click('input[name="login"]')
-    .wait('body')
-    .exists('#signin-feedback');
-  spinner.stop();
-
-  if (hasError) {
-    yield logBody(nightmare);
-    let errMsg = yield nightmare.evaluate(function() {
-      return document.querySelector('#signin-feedback').innerText;
-    });
-    throw new Error(errMsg);
-  }
-
-  // Provide verify code
-  let totp = yield ci.prompt({
-    type: 'input',
-    message: 'Okta verify code:'
-  });
-
-  spinner = new clui.Spinner('Verifying...');
-  spinner.start();
-  hasError = yield nightmare
-    .type('input[name="passcode"]', totp)
-    .click('#verify_factor')
-    .wait(2000) //TODO - Find a better solution here
-    .exists('#oktaSoftTokenAttempt\\.edit\\.errors');
-
-  if (hasError) {
-    yield logBody(nightmare);
-
-    let errMsg = yield nightmare.evaluate(function() {
-      return document.querySelector('#oktaSoftTokenAttempt\\.edit\\.errors').innerText;
-    });
-    throw new Error(errMsg);
-  }
-
-  let samlAssertion = yield nightmare.evaluate(function () {
-    return document.querySelector('input[name="SAMLResponse"]').value;
-  });
-
-  yield nightmare.end();
-  spinner.stop();
-
-  return samlAssertion;
 }
 
 function *selectRole(samlAssertion, roleName) {
@@ -227,17 +159,17 @@ function *writeTokenToConfig(token, label) {
     fs.writeFileSync(configFile, '');
   }
 
-  var config = ini.parse(fs.readFileSync(configFile).toString());
+  var iniCfg = ini.parse(fs.readFileSync(configFile).toString());
 
-  if (!config.hasOwnProperty(label)) {
-    config[label] = {};
+  if (!iniCfg.hasOwnProperty(label)) {
+    iniCfg[label] = {};
   }
 
-  config[label].output = config.outputFormat;
-  config[label].region = config.region;
-  config[label].aws_access_key_id = token.Credentials.AccessKeyId;
-  config[label].aws_secret_access_key = token.Credentials.SecretAccessKey;
-  config[label].aws_session_token = token.Credentials.SessionToken;
+  iniCfg[label].output = config.outputFormat;
+  iniCfg[label].region = config.region;
+  iniCfg[label].aws_access_key_id = token.Credentials.AccessKeyId;
+  iniCfg[label].aws_secret_access_key = token.Credentials.SecretAccessKey;
+  iniCfg[label].aws_session_token = token.Credentials.SessionToken;
 
   fs.writeFileSync(configFile, ini.encode(config));
 }
@@ -248,13 +180,4 @@ function buildProfileName(role, account, overrideName) {
   let roleArn = role.split(',')[1];
   let roleName = roleArn.split('/').pop().toLowerCase();
   return `${account}-${roleName}`;
-}
-
-function *logBody(nightmare) {
-  if (!process.env.DEBUG) { return; }
-
-  let errBody = yield nightmare.evaluate(function () {
-    return document.querySelector('body').innerHTML;
-  });
-  console.log(errBody);
 }

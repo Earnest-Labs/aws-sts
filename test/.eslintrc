@@ -1,0 +1,6 @@
+{
+  "extends": "earnest",
+  "env": {
+    "mocha": true
+  }
+}
