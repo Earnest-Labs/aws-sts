@@ -23,7 +23,7 @@ co(function *() {
   let provider = require(`./providers/${config.provider}`);
 
   let args = parseArgs(provider.name);
-  let samlAssertion = yield provider.login(args.username, args.password, config);
+  let samlAssertion = yield provider.login(config.idpEntryUrl, args.username, args.password);
   let role = yield selectRole(samlAssertion, args.role);
   let token = yield getToken(samlAssertion, args.account, role);
   let profileName = buildProfileName(role, args.account, args.profile);
@@ -172,7 +172,7 @@ function *writeTokenToConfig(token, label) {
   iniCfg[label].aws_secret_access_key = token.Credentials.SecretAccessKey;
   iniCfg[label].aws_session_token = token.Credentials.SessionToken;
 
-  fs.writeFileSync(configFile, ini.encode(config));
+  fs.writeFileSync(configFile, ini.encode(iniCfg));
 }
 
 function buildProfileName(role, account, overrideName) {

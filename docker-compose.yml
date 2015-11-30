@@ -4,3 +4,4 @@ app:
     - ./cfg:/usr/src/app/cfg
     - ./src:/usr/src/app/src
     - ./test:/usr/src/app/test
+    - $HOME/.aws/:/root/.aws/
