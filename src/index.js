@@ -13,13 +13,14 @@ const fs = require('fs');
 const ini = require('ini');
 const path = require('path');
 const clui = require('clui');
+require('colors');
 
 const config = require('../cfg/config');
 
 
 co(function *() {
   console.log('Earnest AWS Token Generator\n'.green.bold);
-  let provider = require(`./src/providers/${config.provider}`);
+  let provider = require(`./providers/${config.provider}`);
 
   let args = parseArgs(provider.name);
   let samlAssertion = yield provider.login(args.username, args.password, config);

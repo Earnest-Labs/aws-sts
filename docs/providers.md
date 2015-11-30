@@ -31,7 +31,7 @@ const Mock = {
 
 ## Okta
 
-The Okta form-based authentication provider uses [Nightmare]() for headless-browser automation. It can successfully 
+The Okta form-based authentication provider uses [Nightmare](http://www.nightmarejs.org/) for headless-browser automation. It can successfully 
 authenticate via the Okta login and handles a TOTP multifactor challenge. Other multifactor challenges are not 
 currently supported.
 
