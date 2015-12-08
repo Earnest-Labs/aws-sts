@@ -8,5 +8,5 @@
     "staging": "aws-account-id",
     "production": "aws-account-id"
   },
-  "defaultAccount": "staging",
+  "defaultAccount": "staging"
 }
