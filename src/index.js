@@ -92,15 +92,13 @@ function *selectRole(samlAssertion, roleName) {
     throw new Error('No roles are assigned to your SAML account. Please contact Ops.')
   }
 
-  let role;
-  if (roleName) {
-    role = roles.find(r => r.split(',')[1].split('/')[1] === roleName);
-    if (!role) {
-      role = roles[0]; // Couldn't find that role, default to the first one
-    }
+  // Set the default role if one was passed
+  let role = roles.find(r => r.split(',')[1].split('/')[1] === roleName);
+  if (!role) {
+    role = roles[0]; // Couldn't find that role, default to the first one
   }
 
-  if (roles.length && !roleName) {
+  if (roles.length > 1 && !roleName) {
     let ci = new coinquirer();
     role = yield ci.prompt({
       type: 'list',
