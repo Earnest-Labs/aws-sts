@@ -13,14 +13,21 @@ the arguments of the docker command.
 
 We recommend the following steps for use in your organization:
 
-1. Fork this repository.
-2. Add a configuration file specific to your needs
-3. Build and publish a docker container for use in your organization
-4. Copy and distribute the [`aws-token.example.sh`](./aws-token.example.sh) script for easy use 
+1. Create a fresh git repository
+2. Copy [`config.example.json`](./cfg/config.example.json) to the root of your repository as `config.json` and edit it for your organization
+3. Copy the [`aws-token.example.sh`](./aws-token.example.sh) script to the root of your repository for easy distribution/use 
+3. Create a Dockerfile for your token generator. The following should be plenty:
+
+```
+FROM earnest/aws-sts
+
+```
+
+4. Build and publish the docker image for use in your organization
 
 ## Configuration
 
-Configuration is done by creating a config.json file in the cfg folder. An [example template](./cfg/config.example.json) is provided.
+Configuration is done by creating a config.json file in the root of your repository. An [example template](./cfg/config.example.json) is provided.
  
 ```
 awsConfigPath:    Path to the user AWS CLI credential file. The recommended path is the path to the Docker container's credential path.
@@ -71,7 +78,7 @@ Optional arguments:
                         as. Defaults to the name of the account specified.
 `````
 
-![Image of Generator in Action](docs/aws-sts-token-generator.gif)
+![Image of Generator in Action](https://raw.githubusercontent.com/meetearnest/aws-sts/master/docs/aws-sts-token-generator.gif)
 
 ## How it Works
 

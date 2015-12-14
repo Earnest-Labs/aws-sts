@@ -15,4 +15,6 @@ ENV DISPLAY=:9.0
 
 VOLUME "/root/.aws"
 
+ONBUILD COPY config.json /usr/src/app/cfg
+
 ENTRYPOINT ["./docker-entrypoint.sh"]
