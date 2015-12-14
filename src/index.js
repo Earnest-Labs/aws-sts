@@ -37,8 +37,12 @@ co(function *() {
   console.log('----------------------------------------------------------------\n\n');
 })
   .catch(function(err) {
-    console.error(err.message);
-    console.error(err.stack);
+    if (err instanceof Error) {
+      console.error(err.message);
+      console.error(err.stack);
+    } else {
+      console.error(err);
+    }
     process.exit(-1);
   });
 
