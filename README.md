@@ -16,14 +16,13 @@ We recommend the following steps for use in your organization:
 1. Create a fresh git repository
 2. Copy [`config.example.json`](./cfg/config.example.json) to the root of your repository as `config.json` and edit it for your organization
 3. Copy the [`aws-token.example.sh`](./aws-token.example.sh) script to the root of your repository for easy distribution/use 
-3. Create a Dockerfile for your token generator. The following should be plenty:
-
-```
-FROM earnest/aws-sts
-
-```
-
-4. Build and publish the docker image for use in your organization
+4. Create a Dockerfile for your token generator. The following should suffice:
+    
+    ```
+    FROM earnest/aws-sts
+    ```
+    
+5. Build and publish the docker image for use in your organization
 
 ## Configuration
 
