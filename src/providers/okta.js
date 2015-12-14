@@ -22,7 +22,7 @@ const Okta = {
     });
 
     spinner.start();
-    let nightmare = Nightmare({show: true});
+    let nightmare = Nightmare();
 
     let hasError = yield nightmare
       .useragent(pkg.description + ' v.' + pkg.version)
