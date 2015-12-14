@@ -22,7 +22,7 @@ const Okta = {
     });
 
     spinner.start();
-    let nightmare = Nightmare();
+    let nightmare = Nightmare({show: true});
 
     let hasError = yield nightmare
       .useragent(pkg.description + ' v.' + pkg.version)
@@ -53,8 +53,8 @@ const Okta = {
     hasError = yield nightmare
       .type('input[name="passcode"]', totp)
       .click('#verify_factor')
-      .wait(2000) //TODO - Find a better solution here
-      .exists('#oktaSoftTokenAttempt\\.edit\\.errors');
+      .evaluate(() => false) // Wait for the next page to load
+      .exists('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty)');
 
     if (hasError) {
       yield logBody(nightmare);
@@ -65,9 +65,11 @@ const Okta = {
       throw new Error(errMsg);
     }
 
-    let samlAssertion = yield nightmare.evaluate(function () {
-      return document.querySelector('input[name="SAMLResponse"]').value;
-    });
+    let samlAssertion = yield nightmare
+      .wait('input[name="SAMLResponse"]')
+      .evaluate(function () {
+        return document.querySelector('input[name="SAMLResponse"]').value;
+      });
 
     yield nightmare.end();
     spinner.stop();
