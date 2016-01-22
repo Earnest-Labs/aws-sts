@@ -173,6 +173,7 @@ function *writeTokenToConfig(token, label) {
   iniCfg[label].aws_access_key_id = token.Credentials.AccessKeyId;
   iniCfg[label].aws_secret_access_key = token.Credentials.SecretAccessKey;
   iniCfg[label].aws_session_token = token.Credentials.SessionToken;
+  iniCfg[label].aws_security_token = token.Credentials.SessionToken;
 
   fs.writeFileSync(configFile, ini.encode(iniCfg));
 }
