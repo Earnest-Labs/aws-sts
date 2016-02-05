@@ -50,10 +50,13 @@ const Okta = {
 
     spinner = new clui.Spinner('Verifying...');
     spinner.start();
-    hasError = yield nightmare
+
+    yield nightmare
       .type('input[name="passcode"]', totp)
       .click('#verify_factor')
-      .evaluate(() => false) // Wait for the next page to load
+      .wait('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty), input[name="SAMLResponse"]');
+
+    hasError = yield nightmare
       .exists('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty)');
 
     if (hasError) {
