@@ -75,14 +75,14 @@ function parseArgs(providerName) {
 
 function *selectRole(samlAssertion, roleName) {
   let buf = new Buffer(samlAssertion, 'base64');
-  let saml = yield thunkify(xml2js.parseString)(buf);
+  let saml = yield thunkify(xml2js.parseString)(buf, { tagNameProcessors: [xml2js.processors.stripPrefix], xmlns: true });
 
   // Extract SAML roles
   let roles;
-  let attributes = saml['saml2p:Response']['saml2:Assertion'][0]['saml2:AttributeStatement'][0]['saml2:Attribute'];
+  let attributes = saml['Response']['Assertion'][0]['AttributeStatement'][0]['Attribute'];
   for (let attribute of attributes) {
-    if (attribute['$']['Name'] === 'https://aws.amazon.com/SAML/Attributes/Role') {
-      roles = attribute['saml2:AttributeValue'].map(function(role) {
+    if (attribute['$']['Name']['value'] === 'https://aws.amazon.com/SAML/Attributes/Role') {
+      roles = attribute['AttributeValue'].map(function(role) {
         return parseRoleAttributeValue(role['_']);
       });
     }
