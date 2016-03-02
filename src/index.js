@@ -83,7 +83,7 @@ function *selectRole(samlAssertion, roleName) {
   for (let attribute of attributes) {
     if (attribute['$']['Name'] === 'https://aws.amazon.com/SAML/Attributes/Role') {
       roles = attribute['saml2:AttributeValue'].map(function(role) {
-        return role['_'];
+        return parseRoleAttributeValue(role['_']);
       });
     }
   }
@@ -93,7 +93,7 @@ function *selectRole(samlAssertion, roleName) {
   }
 
   // Set the default role if one was passed
-  let role = roles.find(r => r.split(',')[1].split('/')[1] === roleName);
+  let role = roles.find(r => r.name === roleName);
   if (!role) {
     role = roles[0]; // Couldn't find that role, default to the first one
   }
@@ -105,7 +105,7 @@ function *selectRole(samlAssertion, roleName) {
       message: 'Please select a role:',
       choices: roles.map(r => {
         return {
-          name: r.split(',')[1].split('/')[1],
+          name: r.name,
           value: r
         }
       })
@@ -115,17 +115,38 @@ function *selectRole(samlAssertion, roleName) {
   return role;
 }
 
+function parseRoleAttributeValue(attributeValue) {
+  let arns = attributeValue.split(',').map(function (arn) {
+    let arnParts = arn.split('/', 2);
+    let key = arnParts[0], value = arnParts[1];
+    let type = key.split('::', 2)[1].split(':', 2)[1];
+
+    return {
+      arn: arn,
+      type: type,
+      value: value
+    };
+  });
+
+  let provider = arns.find(arn => arn.type === 'saml-provider');
+  let role = arns.find(arn => arn.type === 'role');
+
+  return {
+    name: role.value,
+    roleArn: role.arn,
+    principalArn: provider.arn
+  };
+}
+
 function *getToken(samlAssertion, account, role) {
   let spinner = new clui.Spinner('Getting token...');
-  let principalArn = role.split(',')[0];
-  let roleArn = role.split(',')[1];
 
   return new Promise(function(resolve, reject) {
     spinner.start();
     let sts = new AWS.STS({region: config.region});
     sts.assumeRoleWithSAML({
-      PrincipalArn: principalArn,
-      RoleArn: roleArn,
+      PrincipalArn: role.principalArn,
+      RoleArn: role.roleArn,
       SAMLAssertion: samlAssertion
     }, function(err, token) {
       if (err) { return reject(err); }
@@ -135,7 +156,7 @@ function *getToken(samlAssertion, account, role) {
         return resolve(token);
       } else {
         sts.config.credentials = new AWS.Credentials(token.Credentials.AccessKeyId, token.Credentials.SecretAccessKey,token.Credentials.SessionToken);
-        roleArn = roleArn.replace(/::(\d+)/, `::${config.accounts[account]}`);
+        let roleArn = role.roleArn.replace(/::(\d+)/, `::${config.accounts[account]}`);
 
         // Need to switch roles to the other account
         sts.assumeRole({
@@ -181,7 +202,5 @@ function *writeTokenToConfig(token, label) {
 function buildProfileName(role, account, overrideName) {
   if (overrideName) { return overrideName; }
 
-  let roleArn = role.split(',')[1];
-  let roleName = roleArn.split('/').pop().toLowerCase();
-  return `${account}-${roleName}`;
+  return `${account}-${role.name}`;
 }
