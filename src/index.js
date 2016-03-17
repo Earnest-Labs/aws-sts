@@ -16,7 +16,7 @@ const clui = require('clui');
 require('colors');
 
 const config = require('../cfg/config');
-
+const arnRegExp = /^arn:aws:iam::(\d+):([^\/]+)\/(.+)$/
 
 co(function *() {
   console.log('Earnest AWS Token Generator\n'.green.bold);
@@ -92,6 +92,14 @@ function *selectRole(samlAssertion, roleName) {
     throw new Error('No roles are assigned to your SAML account. Please contact Ops.')
   }
 
+  let accountIds = [];
+  roles.forEach(function (role) {
+    if (accountIds.indexOf(role.accountId) == -1) {
+      accountIds.push(role.accountId);
+    }
+  });
+  let multipleAccounts = accountIds.length > 1;
+
   // Set the default role if one was passed
   let role = roles.find(r => r.name === roleName);
   if (!role) {
@@ -104,8 +112,13 @@ function *selectRole(samlAssertion, roleName) {
       type: 'list',
       message: 'Please select a role:',
       choices: roles.map(r => {
+        let name = r.name;
+        if (multipleAccounts) {
+          name += ' (' + r.accountId + ')';
+        }
+
         return {
-          name: r.name,
+          name: name,
           value: r
         }
       })
@@ -117,14 +130,16 @@ function *selectRole(samlAssertion, roleName) {
 
 function parseRoleAttributeValue(attributeValue) {
   let arns = attributeValue.split(',').map(function (arn) {
-    let arnParts = arn.split('/', 2);
-    let key = arnParts[0], value = arnParts[1];
-    let type = key.split('::', 2)[1].split(':', 2)[1];
+    let match = arnRegExp.exec(arn);
+    if (!match) {
+      throw new Error('Unable to parse role ARN: ' + arn);
+    }
 
     return {
       arn: arn,
-      type: type,
-      value: value
+      accountId: match[1],
+      type: match[2],
+      value: match[3]
     };
   });
 
@@ -133,6 +148,7 @@ function parseRoleAttributeValue(attributeValue) {
 
   return {
     name: role.value,
+    accountId: role.accountId,
     roleArn: role.arn,
     principalArn: provider.arn
   };
