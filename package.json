@@ -4,6 +4,8 @@
   "description": "Generation of AWS STS tokens via SAML authentication.",
   "main": "src/index.js",
   "scripts": {
+    "lint": "./node_modules/.bin/eslint .",
+    "lint-changed": "git diff --name-only --cached --relative | grep '\\.js$' | xargs ./node_modules/.bin/eslint",
     "start": "docker-compose run --rm app",
     "test": "docker-compose run --rm --entrypoint ./node_modules/.bin/mocha app --recursive test",
     "docker-shell": "docker-compose run --rm --entrypoint bash app"
@@ -37,8 +39,9 @@
     "xml2js": "^0.4.12"
   },
   "devDependencies": {
-    "eslint": "^1.10.2",
-    "eslint-config-earnest": "latest",
+    "@earnest/eslint-config": "latest",
+    "eslint": "~2.2.0",
+    "eslint-plugin-mocha": "^2.0.0",
     "mocha": "^2.3.4"
   }
 }
