@@ -1,6 +1,1 @@
-{
-  "extends": "earnest",
-  "env": {
-    "mocha": true
-  }
-}
+{"extends": "@earnest/eslint-config/mocha"}
