@@ -1,5 +1,7 @@
 app:
   build: .
+#  environment:
+#    - DEBUG=nightmare*
   volumes:
     - ./cfg:/usr/src/app/cfg
     - ./src:/usr/src/app/src
