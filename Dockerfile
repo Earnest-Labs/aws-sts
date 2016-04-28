@@ -10,9 +10,6 @@ COPY package.json /usr/src/app/
 RUN npm install
 COPY . /usr/src/app
 
-# Necessary for electron to function correctly
-ENV DISPLAY=:9.0
-
 VOLUME "/root/.aws"
 
 ONBUILD COPY config.json /usr/src/app/cfg/
