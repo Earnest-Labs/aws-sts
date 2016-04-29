@@ -4,6 +4,7 @@ const Nightmare = require('nightmare');
 const clui = require('clui');
 const coinquirer = require('coinquirer');
 const pkg = require('../../package.json');
+const path = require('path');
 
 const Okta = {
   name: 'Okta',
@@ -22,8 +23,8 @@ const Okta = {
     });
 
     spinner.start();
-    let nightmare = Nightmare();
 
+    let nightmare = Nightmare({show: false});
     let hasError = yield nightmare
       .useragent(pkg.description + ' v.' + pkg.version)
       .goto(idpEntryUrl)
@@ -35,11 +36,10 @@ const Okta = {
     spinner.stop();
 
     if (hasError) {
-      yield logBody(nightmare);
-      let errMsg = yield nightmare.evaluate(function() {
+      let errMsg = yield nightmare.evaluate(function () {
         return document.querySelector('#signin-feedback').innerText;
       });
-      throw new Error(errMsg);
+      yield fail(nightmare, errMsg);
     }
 
     // Provide verify code
@@ -60,12 +60,10 @@ const Okta = {
       .exists('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty)');
 
     if (hasError) {
-      yield logBody(nightmare);
-
-      let errMsg = yield nightmare.evaluate(function() {
+      let errMsg = yield nightmare.evaluate(function () {
         return document.querySelector('#oktaSoftTokenAttempt\\.edit\\.errors').innerText;
       });
-      throw new Error(errMsg);
+      yield fail(nightmare, errMsg);
     }
 
     let samlAssertion = yield nightmare
@@ -81,13 +79,14 @@ const Okta = {
   }
 };
 
-function *logBody(nightmare) {
+function *fail(nightmare, errMsg) {
   if (!process.env.DEBUG) { return; }
 
-  let errBody = yield nightmare.evaluate(function () {
-    return document.querySelector('body').innerHTML;
-  });
-  console.log(errBody);
+  yield nightmare
+    .screenshot(path.join(process.cwd(), '.debug', 'error.png'))
+    .html(path.join(process.cwd(), '.debug', 'error.html'), 'HTMLComplete');
+
+  throw new Error(errMsg);
 }
 
 module.exports = Okta;
