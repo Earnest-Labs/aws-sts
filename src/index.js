@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint no-console: 0 */
+
 const ArgumentParser  = require('argparse').ArgumentParser;
 const pkg = require('../package.json');
 const co = require('co');
@@ -16,7 +18,7 @@ const clui = require('clui');
 require('colors');
 
 const config = require('../cfg/config');
-const arnRegExp = /^arn:aws:iam::(\d+):([^\/]+)\/(.+)$/
+const arnRegExp = /^arn:aws:iam::(\d+):([^\/]+)\/(.+)$/;
 
 co(function *() {
   console.log('Earnest AWS Token Generator\n'.green.bold);
@@ -30,13 +32,17 @@ co(function *() {
   yield writeTokenToConfig(token, profileName);
 
   console.log('\n\n----------------------------------------------------------------');
-  console.log('Your new access key pair has been stored in the AWS configuration file ' + '~%s'.green.bold + ' under the ' + '%s'.green.bold + ' profile.', config.awsConfigPath, profileName);
-  console.log('Note that it will expire at ' + '%s'.yellow.bold + '.', token.Credentials.Expiration);
+  console.log('Your new access key pair has been stored in the AWS configuration file ' +
+    '~%s'.green.bold + ' under the ' + '%s'.green.bold +
+    ' profile.', config.awsConfigPath, profileName);
+  console.log('Note that it will expire at ' + '%s'.yellow.bold + '.',
+    token.Credentials.Expiration);
   console.log('After this time, you may safely rerun this script to refresh your access key pair.');
-  console.log('To use this credential, call the AWS CLI with the --profile option (e.g. ' + 'aws --profile %s ec2 describe-instances'.italic.grey + ').', profileName);
+  console.log('To use this credential, call the AWS CLI with the --profile option (e.g. ' +
+    'aws --profile %s ec2 describe-instances'.italic.grey + ').', profileName);
   console.log('----------------------------------------------------------------\n\n');
 })
-  .catch(function(err) {
+  .catch(function (err) {
     if (err instanceof Error) {
       console.error(err.message);
       console.error(err.stack);
@@ -68,33 +74,36 @@ function parseArgs(providerName) {
     choices: config.accounts
   });
   parser.addArgument(['--profile'], {
-    help: 'Profile name that the AWS credentials should be saved as. Defaults to the name of the account specified.'
+    help: 'Profile name that the AWS credentials should be saved as. ' +
+    'Defaults to the name of the account specified.'
   });
   return parser.parseArgs();
 }
 
 function *selectRole(samlAssertion, roleName) {
   let buf = new Buffer(samlAssertion, 'base64');
-  let saml = yield thunkify(xml2js.parseString)(buf, { tagNameProcessors: [xml2js.processors.stripPrefix], xmlns: true });
+  let saml = yield thunkify(xml2js.parseString)(
+    buf,
+    {tagNameProcessors: [xml2js.processors.stripPrefix], xmlns: true});
 
   // Extract SAML roles
   let roles;
-  let attributes = saml['Response']['Assertion'][0]['AttributeStatement'][0]['Attribute'];
+  let attributes = saml.Response.Assertion[0].AttributeStatement[0].Attribute;
   for (let attribute of attributes) {
-    if (attribute['$']['Name']['value'] === 'https://aws.amazon.com/SAML/Attributes/Role') {
-      roles = attribute['AttributeValue'].map(function(role) {
-        return parseRoleAttributeValue(role['_']);
+    if (attribute.$.Name.value === 'https://aws.amazon.com/SAML/Attributes/Role') {
+      roles = attribute.AttributeValue.map(function (role) {
+        return parseRoleAttributeValue(role._);
       });
     }
   }
 
   if (!roles || roles.length <= 0) {
-    throw new Error('No roles are assigned to your SAML account. Please contact Ops.')
+    throw new Error('No roles are assigned to your SAML account. Please contact Ops.');
   }
 
   let accountIds = [];
   roles.forEach(function (role) {
-    if (accountIds.indexOf(role.accountId) == -1) {
+    if (accountIds.indexOf(role.accountId) === -1) {
       accountIds.push(role.accountId);
     }
   });
@@ -120,7 +129,7 @@ function *selectRole(samlAssertion, roleName) {
         return {
           name: name,
           value: r
-        }
+        };
       })
     });
   }
@@ -157,34 +166,38 @@ function parseRoleAttributeValue(attributeValue) {
 function *getToken(samlAssertion, account, role) {
   let spinner = new clui.Spinner('Getting token...');
 
-  return new Promise(function(resolve, reject) {
+  return new Promise(function (resolve, reject) {
     spinner.start();
     let sts = new AWS.STS({region: config.region});
     sts.assumeRoleWithSAML({
       PrincipalArn: role.principalArn,
       RoleArn: role.roleArn,
       SAMLAssertion: samlAssertion
-    }, function(err, token) {
+    }, function (err, token) {
       if (err) { return reject(err); }
 
       if (account === config.defaultAccount) {
         spinner.stop();
         return resolve(token);
-      } else {
-        sts.config.credentials = new AWS.Credentials(token.Credentials.AccessKeyId, token.Credentials.SecretAccessKey,token.Credentials.SessionToken);
-        let roleArn = role.roleArn.replace(/::(\d+)/, `::${config.accounts[account]}`);
-
-        // Need to switch roles to the other account
-        sts.assumeRole({
-          RoleArn: roleArn,
-          RoleSessionName: token.AssumedRoleUser.Arn.split('/')[token.AssumedRoleUser.Arn.split('/').length - 1]
-        }, function(err, assumedToken) {
-          if (err) { return reject(err); }
-
-          spinner.stop();
-          return resolve(assumedToken);
-        });
       }
+
+      sts.config.credentials = new AWS.Credentials(
+        token.Credentials.AccessKeyId,
+        token.Credentials.SecretAccessKey,
+        token.Credentials.SessionToken);
+      let roleArn = role.roleArn.replace(/::(\d+)/, `::${config.accounts[account]}`);
+
+      // Need to switch roles to the other account
+      const splitArn = token.AssumedRoleUser.Arn.split('/');
+      sts.assumeRole({
+        RoleArn: roleArn,
+        RoleSessionName: splitArn[splitArn.length - 1]
+      }, function (err, assumedToken) {
+        if (err) { return reject(err); }
+
+        spinner.stop();
+        return resolve(assumedToken);
+      });
     });
   });
 }
@@ -195,7 +208,7 @@ function *writeTokenToConfig(token, label) {
 
   try {
     fs.accessSync(configFile);
-  } catch(err) {
+  } catch (err) {
     fs.writeFileSync(configFile, '');
   }
 
