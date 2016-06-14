@@ -231,5 +231,5 @@ function *writeTokenToConfig(token, label) {
 function buildProfileName(role, account, overrideName) {
   if (overrideName) { return overrideName; }
 
-  return `${account}-${role.name}`;
+  return `${account}`;
 }
