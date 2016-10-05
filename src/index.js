@@ -212,7 +212,7 @@ function *writeTokenToConfig(token, label) {
     fs.writeFileSync(configFile, '');
   }
 
-  var iniCfg = ini.parse(fs.readFileSync(configFile).toString());
+  const iniCfg = ini.parse(fs.readFileSync(configFile).toString());
 
   if (!iniCfg.hasOwnProperty(label)) {
     iniCfg[label] = {};
