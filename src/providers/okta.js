@@ -5,6 +5,8 @@ const clui = require('clui');
 const coinquirer = require('coinquirer');
 const pkg = require('../../package.json');
 const path = require('path');
+const MfaProviders = require('./okta-mfa');
+
 
 const Okta = {
   name: 'Okta',
@@ -24,14 +26,14 @@ const Okta = {
 
     spinner.start();
 
-    let nightmare = Nightmare({show: false});
+    let nightmare = Nightmare({show: process.env.DEBUG});
     let hasError = yield nightmare
       .useragent(pkg.description + ' v.' + pkg.version)
       .goto(idpEntryUrl)
       .type('input[name="username"]', username)
       .type('input[name="password"]', password)
       .click('input[name="login"]')
-      .wait('body')
+      .wait('#signin-feedback, #extra-verification-challenge')
       .exists('#signin-feedback');
     spinner.stop();
 
@@ -42,28 +44,18 @@ const Okta = {
       yield fail(nightmare, errMsg);
     }
 
-    // Provide verify code
-    let totp = yield ci.prompt({
-      type: 'input',
-      message: 'Okta verify code:'
-    });
-
-    spinner = new clui.Spinner('Verifying...');
-    spinner.start();
-
-    yield nightmare
-      .type('input[name="passcode"]', totp)
-      .click('#verify_factor')
-      .wait('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty), input[name="SAMLResponse"]');
-
-    hasError = yield nightmare
-      .exists('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty)');
-
-    if (hasError) {
-      let errMsg = yield nightmare.evaluate(function () {
-        return document.querySelector('#oktaSoftTokenAttempt\\.edit\\.errors').innerText;
-      });
-      yield fail(nightmare, errMsg);
+    for (let i = 0; i < MfaProviders.length; i++) {
+      const mfaProvider = MfaProviders[i];
+      const good = yield mfaProvider.detect(nightmare);
+      if (good) {
+        try {
+          const prompt = yield mfaProvider.prompt(ci);
+          yield mfaProvider.verify(prompt, nightmare);
+        } catch (err) {
+          yield fail(nightmare, err.message);
+        }
+        break;
+      }
     }
 
     let samlAssertion = yield nightmare
@@ -80,11 +72,11 @@ const Okta = {
 };
 
 function *fail(nightmare, errMsg) {
-  if (!process.env.DEBUG) { return; }
-
-  yield nightmare
-    .screenshot(path.join(process.cwd(), '.debug', 'error.png'))
-    .html(path.join(process.cwd(), '.debug', 'error.html'), 'HTMLComplete');
+  if (process.env.DEBUG) {
+    yield nightmare
+      .screenshot(path.join(process.cwd(), '.debug', 'error.png'))
+      .html(path.join(process.cwd(), '.debug', 'error.html'), 'HTMLComplete');
+  }
 
   throw new Error(errMsg);
 }
