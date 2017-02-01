@@ -1,5 +1,6 @@
 # AWS STS Token Generator
 
+
 Single Sign on within AWS removes the ability to generate long-lived access tokens for AWS. Instead, the 
 [Amazon Security Token Service](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html) is used to generate 
 short-lived tokens.
@@ -92,8 +93,20 @@ We're using headless browser automation to emulate a form-based sign-on. This is
  6. Present accessible roles to the user (if more than one) and allow them to select the role to assume
  7. Use the STS API to [assume the role](http://docs.aws.amazon.com/cli/latest/reference/sts/assume-role-with-saml.html)
  8. Save the token information to the [AWS credentials file](https://blogs.aws.amazon.com/security/post/Tx3D6U6WSFGOK2H/A-New-and-Standardized-Way-to-Manage-Credentials-in-the-AWS-SDKs)
- 
-### Limitations
+
+## Found a bug?
+
+File it [HERE](https://github.com/meetearnest/aws-sts/issues/new)
+
+## Troubleshooting
+
+Sometimes, you might run into a timeout when you think all the required params are entered correctly.  When that happens, it's useful to turn of headless browsing to see what's going on.
+
+```
+$ npm run start-debug
+```
+
+## Limitations
 
 * All functionality is executed inside a Docker container. Docker must be available in order for the application to work.
 * At the moment, only Okta authentication is supported. We welcome Pull Requests for additional providers.

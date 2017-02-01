@@ -3,11 +3,17 @@
   "version": "1.0.0",
   "description": "Generation of AWS STS tokens via SAML authentication.",
   "main": "src/index.js",
+  "engines": {
+    "node": ">= 4.0.0"
+  },
   "scripts": {
     "lint": "./node_modules/.bin/eslint .",
     "lint-changed": "git diff --name-only --cached --relative | grep '\\.js$' | xargs ./node_modules/.bin/eslint",
-    "start": "docker-compose run --rm app",
-    "test": "docker-compose run --rm --entrypoint ./node_modules/.bin/mocha app --recursive test",
+    "start": "node src/index.js",
+    "start-debug": "DEBUG=true node src/index.js",
+    "start-docker": "docker-compose run --rm app",
+    "test": "./node_modules/.bin/mocha --recursive test",
+    "test-docker": "docker-compose run --rm --entrypoint ./node_modules/.bin/mocha app --recursive test",
     "docker-shell": "docker-compose run --rm --entrypoint bash app"
   },
   "repository": {
