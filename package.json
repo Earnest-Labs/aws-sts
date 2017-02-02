@@ -32,8 +32,8 @@
   },
   "homepage": "https://github.com/meetearnest/aws-sts#readme",
   "dependencies": {
-    "argparse": "^1.0.2",
-    "aws-sdk": "^2.2.5",
+    "argparse": "^1.0.9",
+    "aws-sdk": "^2.9.0",
     "clui": "^0.3.1",
     "co": "^4.6.0",
     "coinquirer": "0.0.5",
@@ -42,7 +42,7 @@
     "mkdirp": "^0.5.1",
     "nightmare": "^2.10.0",
     "thunkify": "^2.1.2",
-    "xml2js": "^0.4.12"
+    "xml2js": "^0.4.17"
   },
   "devDependencies": {
     "@earnest/eslint-config": "latest",
