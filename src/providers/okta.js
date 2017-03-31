@@ -30,19 +30,20 @@ const Okta = {
     let hasError = yield nightmare
       .useragent(pkg.description + ' v.' + pkg.version)
       .goto(idpEntryUrl)
+      .wait('#okta-sign-in')
       .type('input[name="username"]', username)
       .type('input[name="password"]', password)
-      .click('input[name="login"]')
-      .wait('#signin-feedback, #extra-verification-challenge')
-      .exists('#signin-feedback');
+      .click('input[value="Sign In"]')
+      .wait('#okta-sign-in .mfa-verify')
+      .exists('#okta-sign-in');
     spinner.stop();
 
-    if (hasError) {
-      let errMsg = yield nightmare.evaluate(function () {
-        return document.querySelector('#signin-feedback').innerText;
-      });
-      yield fail(nightmare, errMsg);
-    }
+    //if (hasError) {
+      //let errMsg = yield nightmare.evaluate(function () {
+      //  return document.querySelector('#signin-feedback').innerText;
+      //});
+      //yield fail(nightmare, errMsg);
+    //}
 
     for (let i = 0; i < MfaProviders.length; i++) {
       const mfaProvider = MfaProviders[i];
