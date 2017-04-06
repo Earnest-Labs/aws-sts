@@ -6,6 +6,7 @@ const coinquirer = require('coinquirer');
 const pkg = require('../../package.json');
 const path = require('path');
 const MfaProviders = require('./okta-mfa');
+const sleep = require('sleep');
 
 
 const Okta = {
@@ -31,19 +32,19 @@ const Okta = {
       .useragent(pkg.description + ' v.' + pkg.version)
       .goto(idpEntryUrl)
       .wait('#okta-sign-in')
-      .type('input[name="username"]', username)
-      .type('input[name="password"]', password)
+      .insert('input[name="username"]', username)
+      .insert('input[name="password"]', password)
       .click('input[value="Sign In"]')
-      .wait('#okta-sign-in .mfa-verify')
-      .exists('#okta-sign-in');
+      .wait('.okta-form-infobox-error, #okta-sign-in .mfa-verify')
+      .exists('.okta-form-infobox-error');
     spinner.stop();
 
-    //if (hasError) {
-      //let errMsg = yield nightmare.evaluate(function () {
-      //  return document.querySelector('#signin-feedback').innerText;
-      //});
-      //yield fail(nightmare, errMsg);
-    //}
+    if (hasError) {
+      let errMsg = yield nightmare.evaluate(function () {
+        return document.querySelector('.o-form-content .o-form-error-container').innerText;
+      });
+      yield fail(nightmare, errMsg);
+    }
 
     for (let i = 0; i < MfaProviders.length; i++) {
       const mfaProvider = MfaProviders[i];
@@ -59,12 +60,21 @@ const Okta = {
       }
     }
 
-    let samlAssertion = yield nightmare
-      .wait('input[name="SAMLResponse"]')
-      .evaluate(function () {
-        return document.querySelector('input[name="SAMLResponse"]').value;
-      });
+    function *getSamlResponse(nightmare) {
+      for(var i = 0; i < 120; i++) {
+        try {
+          let result = yield nightmare
+            .evaluate(function () {
+              return document.querySelector('input[name="SAMLResponse"]').value;
+            });
+          return result;
+        } catch (e) {
+        }
+        sleep.msleep(250);
+      }
+    }
 
+    let samlAssertion = yield getSamlResponse(nightmare);
     yield nightmare.end();
     spinner.stop();
 
