@@ -51,8 +51,8 @@ const OktaVerify = {
     spinner.start();
 
     yield nightmare
-      .click('input[value="Send Push"]')
-      .wait('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty), input[name="SAMLResponse"]');
+      .click('input[value="Send Push"]');
+      //.wait('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty), input[name="SAMLResponse"]');
 
     spinner.stop();
 
