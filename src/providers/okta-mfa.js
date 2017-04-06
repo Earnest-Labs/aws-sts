@@ -39,7 +39,7 @@ const GoogleAuthenticator = {
 
 const OktaVerify = {
   detect: function *(nightmare) {
-    return yield nightmare.visible('#send-push');
+    return yield nightmare.visible('input[value="Send Push"]');
   },
 
   prompt: function *() {
@@ -51,8 +51,8 @@ const OktaVerify = {
     spinner.start();
 
     yield nightmare
-      .click('#send-push')
-      .wait('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty), input[name="SAMLResponse"]');
+      .click('input[value="Send Push"]');
+      //.wait('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty), input[name="SAMLResponse"]');
 
     spinner.stop();
 

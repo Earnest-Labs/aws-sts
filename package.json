@@ -36,7 +36,8 @@
     "mkdirp": "^0.5.1",
     "nightmare": "^2.3.4",
     "thunkify": "^2.1.2",
-    "xml2js": "^0.4.12"
+    "xml2js": "^0.4.12",
+    "sleep": "^5.1.0"
   },
   "devDependencies": {
     "@earnest/eslint-config": "latest",
