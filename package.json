@@ -33,7 +33,7 @@
   "homepage": "https://github.com/meetearnest/aws-sts#readme",
   "dependencies": {
     "argparse": "^1.0.9",
-    "aws-sdk": "^2.9.0",
+    "aws-sdk": "^2.49.0",
     "clui": "^0.3.1",
     "co": "^4.6.0",
     "coinquirer": "0.0.5",
