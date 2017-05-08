@@ -30,16 +30,17 @@ const Okta = {
     let hasError = yield nightmare
       .useragent(pkg.description + ' v.' + pkg.version)
       .goto(idpEntryUrl)
+      .wait('input[type="submit"]') // Form is loaded via AJAX
       .type('input[name="username"]', username)
       .type('input[name="password"]', password)
-      .click('input[name="login"]')
-      .wait('#signin-feedback, #extra-verification-challenge')
-      .exists('#signin-feedback');
+      .click('input[type="submit"]') // Submit form
+      .wait('.o-form-has-errors, .mfa-verify') // Wait for error or success
+      .exists('.o-form-has-errors');
     spinner.stop();
 
     if (hasError) {
       let errMsg = yield nightmare.evaluate(function () {
-        return document.querySelector('#signin-feedback').innerText;
+        return document.querySelector('.o-form-has-errors').innerText;
       });
       yield fail(nightmare, errMsg);
     }
