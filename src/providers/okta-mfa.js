@@ -4,7 +4,7 @@ const clui = require('clui');
 
 const GoogleAuthenticator = {
   detect: function *(nightmare) {
-    return yield nightmare.visible('.google-auth-180');
+    return yield nightmare.visible('.mfa-verify-totp');
   },
 
   prompt: function *(ci) {
@@ -19,18 +19,18 @@ const GoogleAuthenticator = {
     spinner.start();
 
     yield nightmare
-      .type('input[name="passcode"]', mfaPrompt)
-      .click('#verify_factor')
-      .wait('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty), input[name="SAMLResponse"]');
+      .type('input[name="answer"]', mfaPrompt)
+      .click('input[type="submit"]')
+      .wait('.o-form-has-errors, input[name="SAMLResponse"]');
 
     spinner.stop();
 
     const hasError = yield nightmare
-      .exists('#oktaSoftTokenAttempt\\.passcode\\.error:not(:empty)');
+      .exists('.o-form-has-errors');
 
     if (hasError) {
       let errMsg = yield nightmare.evaluate(function () {
-        return document.querySelector('#oktaSoftTokenAttempt\\.edit\\.errors').innerText;
+        return document.querySelector('.o-form-has-errors').innerText;
       });
       throw new Error(errMsg);
     }
