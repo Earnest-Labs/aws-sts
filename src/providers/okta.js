@@ -30,8 +30,9 @@ const Okta = {
     let nightmare = Nightmare({
       show: process.env.DEBUG,
       openDevTools: true,
-      typeInterval: 20,
-      pollInterval: 10
+      typeInterval: 5,
+      pollInterval: 10,
+      waitTimeout: 30 * 1000
     });
     let hasError = yield nightmare
       .on('console', function (type, message) {
