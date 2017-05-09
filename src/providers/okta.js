@@ -6,7 +6,7 @@ const coinquirer = require('coinquirer');
 const pkg = require('../../package.json');
 const path = require('path');
 const MfaProviders = require('./okta-mfa');
-
+const OktaHelpers = require('./okta-helpers');
 
 const Okta = {
   name: 'Okta',
@@ -26,20 +26,44 @@ const Okta = {
 
     spinner.start();
 
-    let nightmare = Nightmare({show: process.env.DEBUG});
+    let samlAssertion = undefined;
+    let nightmare = Nightmare({
+      show: process.env.DEBUG,
+      openDevTools: true,
+      typeInterval: 5,
+      pollInterval: 10,
+      waitTimeout: 30 * 1000
+    });
     let hasError = yield nightmare
+      .on('console', function (type, message) {
+        // After authentication, Okta will create an interstitial page with a form including
+        // a hidden input with the SAML response data. Javascript then immediately submits the
+        // form once the page loads. This means there is limited time to extract the SAML response.
+        // Each `wait` call is capable of detecting the SAML response. However, then executing an
+        // `evaluate` call takes long enough for the SAML response to no longer be available.
+        // So, we need to capture the SAML response in the `wait` call. The easiest mechanism to
+        // get data from the browser back to Node is via the console logger. This event handler
+        // looks for a log including the SAML response.
+        //
+        // This event handler is so early in the chain because it must be attached prior to calling
+        // `goto`.
+        if (type === 'log' && message && message.indexOf('SAMLResponse') >= 0) {
+          samlAssertion = JSON.parse(message).SAMLResponse;
+        }
+      })
       .useragent(pkg.description + ' v.' + pkg.version)
       .goto(idpEntryUrl)
+      .wait('input[type="submit"]') // Form is loaded via AJAX
       .type('input[name="username"]', username)
       .type('input[name="password"]', password)
-      .click('input[name="login"]')
-      .wait('#signin-feedback, #extra-verification-challenge')
-      .exists('#signin-feedback');
+      .click('input[type="submit"]') // Submit form
+      .wait('.o-form-has-errors, .mfa-verify') // Wait for error or success
+      .exists('.o-form-has-errors');
     spinner.stop();
 
     if (hasError) {
       let errMsg = yield nightmare.evaluate(function () {
-        return document.querySelector('#signin-feedback').innerText;
+        return document.querySelector('.o-form-has-errors').innerText;
       });
       yield fail(nightmare, errMsg);
     }
@@ -58,15 +82,15 @@ const Okta = {
       }
     }
 
-    let samlAssertion = yield nightmare
-      .wait('input[name="SAMLResponse"]')
-      .evaluate(function () {
-        return document.querySelector('input[name="SAMLResponse"]').value;
-      });
-
+    if (!samlAssertion) {
+      yield nightmare.wait(OktaHelpers.waitAndEmitSAMLResponse);
+    }
     yield nightmare.end();
     spinner.stop();
 
+    if (!samlAssertion) {
+      throw new Error('SAML Assertion was never found.');
+    }
     return samlAssertion;
   }
 };
