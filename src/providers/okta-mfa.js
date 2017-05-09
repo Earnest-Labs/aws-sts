@@ -1,6 +1,7 @@
 'use strict';
 
 const clui = require('clui');
+const OktaHelpers = require('./okta-helpers');
 
 const GoogleAuthenticator = {
   detect: function *(nightmare) {
@@ -21,8 +22,7 @@ const GoogleAuthenticator = {
     yield nightmare
       .type('input[name="answer"]', mfaPrompt)
       .click('input[type="submit"]')
-      .wait('.o-form-has-errors, input[name="SAMLResponse"]');
-
+      .wait(OktaHelpers.waitAndEmitSAMLResponse);
     spinner.stop();
 
     const hasError = yield nightmare
@@ -52,8 +52,7 @@ const OktaVerify = {
 
     yield nightmare
       .click('.mfa-verify-push input[type="submit"]')
-      .wait('.o-form-has-errors, input[name="SAMLResponse"]');
-
+      .wait(OktaHelpers.waitAndEmitSAMLResponse);
     spinner.stop();
 
     const hasError = yield nightmare
