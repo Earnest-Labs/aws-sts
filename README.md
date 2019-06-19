@@ -14,11 +14,21 @@ the arguments of the docker command.
 ## Installation
 
 The token generator runs as a docker container which can bind-mount to your AWS credentials file to save temporary credentials.
-Installation is as simple as downloading the [`aws-token.sh`](./aws-token.sh) script and saving it to your prefered PATH location e.g. `/usr/local/bin/aws-token`. Then execute that file every time
+Installation is as simple as downloading the [`aws-token`](./example/aws-token) script and saving it to your prefered PATH location e.g. `/usr/local/bin/aws-token`. Then execute that file every time
 you need a new token.
 
 ```
 $ aws-token
+```
+
+### Bonus: exporting the credentials as ENV vars
+
+```
+export AWS_PROFILE=<the generated profile here>
+export AWS_ACCESS_KEY_ID=$(aws configure get $AWS_PROFILE.aws_access_key_id)
+export AWS_SECRET_ACCESS_KEY=$(aws configure get $AWS_PROFILE.aws_secret_access_key)
+export AWS_SESSION_TOKEN=$(aws configure get $AWS_PROFILE.aws_session_token)
+export AWS_DEFAULT_REGION=us-east-1
 ```
 
 ## Usage
