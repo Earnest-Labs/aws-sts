@@ -18,7 +18,7 @@ Installation is as simple as downloading the [`aws-token`](./example/aws-token) 
 you need a new token.
 
 ```
-$ aws-token
+$> aws-token
 ```
 
 ### Bonus: exporting the credentials as ENV vars
@@ -34,7 +34,7 @@ export AWS_DEFAULT_REGION=us-east-1
 ## Usage
 
 `````
-$> ./aws-token.sh --help
+$> aws-token --help
 usage: index.js [-h] [-v] [--username USERNAME] [--password PASSWORD]
                 [--role ROLE]
                 [--account {staging,development}]
