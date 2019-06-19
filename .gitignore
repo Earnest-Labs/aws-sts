@@ -1,5 +1,5 @@
 .DS_Store
 .debug
 node_modules
-aws-token.sh
-config.json
+config.json*
+!example/config.json

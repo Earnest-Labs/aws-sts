@@ -1,0 +1,21 @@
+{
+  "awsConfigPath": "/.aws/credentials",
+  "outputFormat": "json",
+  "region": "us-east-1",
+  "provider": "okta",
+  "accounts": {
+    "development": {
+      "accountNumber": "747722827777",
+      "idpEntryUrl": "https://dev-777777.okta.com/home/amazon_aws/XXXXXXXXXXXXXX/272"
+    },
+    "staging": {
+      "accountNumber": "747722827777",
+      "idpEntryUrl": "https://dev-777777.okta.com/home/amazon_aws/XXXXXXXXXXXXXX/272"
+    },
+    "production": {
+      "accountNumber": "747722827777",
+      "idpEntryUrl": "https://dev-777777.okta.com/home/amazon_aws/XXXXXXXXXXXXXX/272"
+    }
+  },
+  "defaultAccount": "development"
+}
