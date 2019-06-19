@@ -8,13 +8,12 @@ const co = require('co');
 const coinquirer = require('coinquirer');
 const xml2js = require('xml2js');
 const thunkify = require('thunkify');
-const AWS = require('aws-sdk');
 const mkdirp = require('mkdirp');
 const os = require('os');
 const fs = require('fs');
 const ini = require('ini');
 const path = require('path');
-const clui = require('clui');
+const getToken = require('./token-getter');
 require('colors');
 
 const config = require('../cfg/config');
@@ -22,13 +21,15 @@ const arnRegExp = /^arn:aws:iam::(\d+):([^\/]+)\/(.+)$/;
 
 co(function *() {
   console.log('Earnest AWS Token Generator\n'.green.bold);
-  let provider = require(`./providers/${config.provider}`);
+  const provider = require(`./providers/${config.provider}`);
+  const args = parseArgs(provider.name);
+  const account = getSelectedAccount(args);
+  const idpEntryUrl = getIDPEntryURL(account);
 
-  let args = parseArgs(provider.name);
-  let samlAssertion = yield provider.login(config.idpEntryUrl, args.username, args.password);
-  let role = yield selectRole(samlAssertion, args.role);
-  let token = yield getToken(samlAssertion, args.account, role);
-  let profileName = buildProfileName(role, args.account, args.profile);
+  const samlAssertion = yield provider.login(idpEntryUrl, args.username, args.password);
+  const role = yield selectRole(samlAssertion, args.role);
+  const token = yield getToken(config, samlAssertion, account, role);
+  const profileName = buildProfileName(role, account.name, args.profile);
   yield writeTokenToConfig(token, profileName);
 
   console.log('\n\n----------------------------------------------------------------');
@@ -78,6 +79,18 @@ function parseArgs(providerName) {
     'Defaults to the name of the account specified.'
   });
   return parser.parseArgs();
+}
+
+// getIDPEntryURL returns the account IDP if defined else fallback to the
+// config global IDP
+function getIDPEntryURL(account) {
+  return account.idpEntryUrl ? account.idpEntryUrl : config.idpEntryUrl;
+}
+
+function getSelectedAccount(args) {
+  let account = config.accounts[args.account];
+  account.name = args.account;
+  return account;
 }
 
 function *selectRole(samlAssertion, roleName) {
@@ -161,45 +174,6 @@ function parseRoleAttributeValue(attributeValue) {
     roleArn: role.arn,
     principalArn: provider.arn
   };
-}
-
-function *getToken(samlAssertion, account, role) {
-  let spinner = new clui.Spinner('Getting token...');
-
-  return new Promise(function (resolve, reject) {
-    spinner.start();
-    let sts = new AWS.STS({region: config.region});
-    sts.assumeRoleWithSAML({
-      PrincipalArn: role.principalArn,
-      RoleArn: role.roleArn,
-      SAMLAssertion: samlAssertion
-    }, function (err, token) {
-      if (err) { return reject(err); }
-
-      if (account === config.defaultAccount) {
-        spinner.stop();
-        return resolve(token);
-      }
-
-      sts.config.credentials = new AWS.Credentials(
-        token.Credentials.AccessKeyId,
-        token.Credentials.SecretAccessKey,
-        token.Credentials.SessionToken);
-      let roleArn = role.roleArn.replace(/::(\d+)/, `::${config.accounts[account]}`);
-
-      // Need to switch roles to the other account
-      const splitArn = token.AssumedRoleUser.Arn.split('/');
-      sts.assumeRole({
-        RoleArn: roleArn,
-        RoleSessionName: splitArn[splitArn.length - 1]
-      }, function (err, assumedToken) {
-        if (err) { return reject(err); }
-
-        spinner.stop();
-        return resolve(assumedToken);
-      });
-    });
-  });
 }
 
 function *writeTokenToConfig(token, label) {

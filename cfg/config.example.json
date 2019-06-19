@@ -3,10 +3,19 @@
   "outputFormat": "json",
   "region": "us-east-1",
   "provider": "okta",
-  "idpEntryUrl": "https://xxx.okta.com/home/amazon_aws/xxx",
   "accounts": {
-    "staging": "aws-account-id",
-    "production": "aws-account-id"
+    "development": {
+      "accountNumber": "aws-account-id",
+      "idpEntryUrl": "https://xxx.okta.com/home/amazon_aws/xxx"
+    },
+    "staging": {
+      "accountNumber": "aws-account-id",
+      "idpEntryUrl": "https://xxx.okta.com/home/amazon_aws/xxx"
+    },
+    "production": {
+      "accountNumber": "aws-account-id",
+      "idpEntryUrl": "https://xxx.okta.com/home/amazon_aws/xxx"
+    }
   },
   "defaultAccount": "staging"
 }

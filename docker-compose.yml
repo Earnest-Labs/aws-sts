@@ -1,10 +1,14 @@
-app:
-  build: .
-  environment:
-    - DEBUG=nightmare*
-  volumes:
-    - ./cfg:/usr/src/app/cfg
-    - ./src:/usr/src/app/src
-    - ./test:/usr/src/app/test
-    - ./.debug:/usr/src/app/.debug
-    - $HOME/.aws/:/root/.aws/
+version: '3'
+
+services:
+  app:
+    image: earnest-sts:base
+    build: .
+    environment:
+      - DEBUG=nightmare*
+    volumes:
+      - ./cfg:/usr/src/app/cfg
+      - ./src:/usr/src/app/src
+      - ./test:/usr/src/app/test
+      - ./.debug:/usr/src/app/.debug
+      - $HOME/.aws/:/root/.aws/
