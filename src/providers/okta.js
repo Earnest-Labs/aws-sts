@@ -57,7 +57,7 @@ const Okta = {
       .type('input[name="username"]', username)
       .type('input[name="password"]', password)
       .click('input[type="submit"]') // Submit form
-      .wait('.o-form-has-errors, .mfa-verify') // Wait for error or success
+      .wait('.o-form-has-errors, .mfa-verify, #saml_form') // Wait for error or success
       .exists('.o-form-has-errors');
     spinner.stop();
 
