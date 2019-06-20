@@ -33,7 +33,7 @@
   "homepage": "https://github.com/meetearnest/aws-sts#readme",
   "dependencies": {
     "argparse": "^1.0.9",
-    "aws-sdk": "^2.49.0",
+    "aws-sdk": "^2.478.0",
     "clui": "^0.3.1",
     "co": "^4.6.0",
     "coinquirer": "0.0.5",
@@ -46,8 +46,8 @@
   },
   "devDependencies": {
     "@earnest/eslint-config": "latest",
-    "eslint": "~2.2.0",
-    "eslint-plugin-mocha": "^2.0.0",
-    "mocha": "^2.3.4"
+    "eslint": "~5.3.0",
+    "eslint-plugin-mocha": "~5.3.0",
+    "mocha": "~6.1.4"
   }
 }
