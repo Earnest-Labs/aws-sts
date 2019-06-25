@@ -2,18 +2,20 @@
 const AWS = require('aws-sdk');
 const clui = require('clui');
 
+// Not thread safe!
 class TokenGetter {
-  constructor(config, samlAssertion, account, role) {
+  constructor(config) {
     this.spinner = new clui.Spinner('Getting token...');
     this.sts = new AWS.STS({region: config.region});
-    this.samlAssertion = samlAssertion;
-    this.role = role;
-    this.account = account;
     this.defaultAccount = config.defaultAccount;
-    this.accountNumber = this.account.accountNumber;
   }
 
-  async getToken() {
+  async getToken(samlAssertion, account, role) {
+    this.samlAssertion = samlAssertion;
+    this.account = account;
+    this.accountNumber = this.account.accountNumber;
+    this.role = role;
+
     try {
       this.spinner.start();
       const token = await this.getSTSToken();
@@ -61,8 +63,4 @@ class TokenGetter {
   }
 }
 
-function *getToken(config, samlAssertion, account, role) {
-  return new TokenGetter(config, samlAssertion, account, role).getToken();
-}
-
-module.exports = getToken;
+module.exports = TokenGetter;

@@ -13,7 +13,7 @@ const os = require('os');
 const fs = require('fs');
 const ini = require('ini');
 const path = require('path');
-const getToken = require('./token-getter');
+const TokenGetter = require('./token-getter');
 require('colors');
 
 const config = require('../cfg/config');
@@ -23,12 +23,13 @@ co(function *() {
   console.log('Earnest AWS Token Generator\n'.green.bold);
   const provider = require(`./providers/${config.provider}`);
   const args = parseArgs(provider.name);
+  const tokenGetter = new TokenGetter(config);
   const accountNumber = config.accounts[args.account];
   const account = {accountNumber, name: args.account};
 
   const samlAssertion = yield provider.login(config.idpEntryUrl, args.username, args.password);
   const role = yield selectRole(samlAssertion, args.role);
-  const token = yield getToken(config, samlAssertion, account, role);
+  const token = yield tokenGetter.getToken(samlAssertion, account, role);
   const profileName = buildProfileName(role, account.name, args.profile);
   yield writeTokenToConfig(token, profileName);
 
