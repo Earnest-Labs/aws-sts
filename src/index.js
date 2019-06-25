@@ -24,10 +24,10 @@ co(function *() {
   const provider = require(`./providers/${config.provider}`);
   const args = parseArgs(provider.name);
   const tokenGetter = new TokenGetter(config);
-  const accountNumber = config.accounts[args.account];
-  const account = {accountNumber, name: args.account};
+  const account = config.accounts[args.account];
+  const idpEntryUrl = account.idpEntryUrl ? account.idpEntryUrl : config.idpEntryUrl;
 
-  const samlAssertion = yield provider.login(config.idpEntryUrl, args.username, args.password);
+  const samlAssertion = yield provider.login(idpEntryUrl, args.username, args.password);
   const role = yield selectRole(samlAssertion, args.role);
   const token = yield tokenGetter.getToken(samlAssertion, account, role);
   const profileName = buildProfileName(role, account.name, args.profile);

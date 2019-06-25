@@ -3,3 +3,4 @@
 node_modules
 aws-token.sh
 config.json*
+!example/config.json

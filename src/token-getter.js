@@ -20,7 +20,9 @@ class TokenGetter {
       this.spinner.start();
       const token = await this.getSTSToken();
 
-      if (this.isDefaultAccount()) {
+      // if the account has an IDP field we don't care about the default account
+      // because we loged in directly to the final account
+      if (this.isDefaultAccount() || this.hasAccountIDP()) {
         this.spinner.stop();
         return token;
       }
@@ -37,6 +39,10 @@ class TokenGetter {
 
   isDefaultAccount() {
     return this.account.name === this.defaultAccount;
+  }
+
+  hasAccountIDP() {
+    return 'idpEntryUrl' in this.account;
   }
 
   async getSTSToken() {
