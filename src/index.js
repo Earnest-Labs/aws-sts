@@ -23,7 +23,8 @@ co(function *() {
   console.log('Earnest AWS Token Generator\n'.green.bold);
   const provider = require(`./providers/${config.provider}`);
   const args = parseArgs(provider.name);
-  const account = getSelectedAccount(config, args);
+  const accountNumber = config.accounts[args.account];
+  const account = {accountNumber, name: args.account};
 
   const samlAssertion = yield provider.login(config.idpEntryUrl, args.username, args.password);
   const role = yield selectRole(samlAssertion, args.role);
@@ -78,11 +79,6 @@ function parseArgs(providerName) {
     'Defaults to the name of the account specified.'
   });
   return parser.parseArgs();
-}
-
-function getSelectedAccount(config, args) {
-  let accountNumber = config.accounts[args.account];
-  return {accountNumber, name: args.account};
 }
 
 function *selectRole(samlAssertion, roleName) {
