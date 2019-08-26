@@ -27,7 +27,7 @@ co(function *() {
   const account = config.accounts[args.account];
   const idpEntryUrl = account.idpEntryUrl ? account.idpEntryUrl : config.idpEntryUrl;
 
-  const samlAssertion = yield provider.login(idpEntryUrl, args.username, args.password);
+  const samlAssertion = yield provider.login(idpEntryUrl, args.username, args.password, args.otp);
   const role = yield selectRole(samlAssertion, args.role);
   const token = yield tokenGetter.getToken(samlAssertion, account, role);
   const profileName = buildProfileName(role, account.name, args.profile);
@@ -66,6 +66,9 @@ function parseArgs(providerName) {
   });
   parser.addArgument(['--password'], {
     help: `${providerName} password`
+  });
+  parser.addArgument(['--otp'], {
+    help: `${providerName} otp (2FA)`
   });
   parser.addArgument(['--role'], {
     help: 'Name of SAML role to assume'
