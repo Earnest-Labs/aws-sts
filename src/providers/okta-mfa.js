@@ -20,7 +20,10 @@ const GoogleAuthenticator = {
     spinner.start();
 
     yield nightmare
+      .visible('.mfa-verify-totp')
+      .wait(300)
       .type('input[name="answer"]', mfaPrompt)
+      .wait(1000)
       .click('input[type="submit"]')
       .wait(OktaHelpers.waitAndEmitSAMLResponse);
     spinner.stop();

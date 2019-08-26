@@ -11,7 +11,7 @@ const OktaHelpers = require('./okta-helpers');
 const Okta = {
   name: 'Okta',
 
-  login: function *(idpEntryUrl, username, password) {
+  login: function *(idpEntryUrl, username, password, otp) {
     let spinner = new clui.Spinner('Logging in...');
 
     let ci = new coinquirer();
@@ -53,7 +53,9 @@ const Okta = {
       })
       .useragent(pkg.description + ' v.' + pkg.version)
       .goto(idpEntryUrl)
+      .visible('.primary-auth-form')
       .wait('input[type="submit"]') // Form is loaded via AJAX
+      .wait(300)
       .type('input[name="username"]', username)
       .type('input[name="password"]', password)
       .click('input[type="submit"]') // Submit form
@@ -73,7 +75,7 @@ const Okta = {
       const good = yield mfaProvider.detect(nightmare);
       if (good) {
         try {
-          const prompt = yield mfaProvider.prompt(ci);
+          const prompt = otp ? otp : yield mfaProvider.prompt(ci);
           yield mfaProvider.verify(prompt, nightmare);
         } catch (err) {
           yield fail(nightmare, err.message);
