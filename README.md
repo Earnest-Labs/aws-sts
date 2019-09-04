@@ -1,4 +1,4 @@
-# AWS STS Token Generator
+# AWS STS Token Generator2
 
 Single Sign on within AWS removes the ability to generate long-lived access tokens for AWS. Instead, the
 [Amazon Security Token Service](http://docs.aws.amazon.com/STS/latest/APIReference/Welcome.html) is used to generate
