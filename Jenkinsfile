@@ -35,7 +35,7 @@ pipeline {
       }
     }
 
-    stage("Build") {
+    stage("Build and Push") {
       steps {
         script {
             sh "docker build -t $DOCKER_IMAGE_TAG ."
