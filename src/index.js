@@ -26,6 +26,7 @@ co(function *() {
   const tokenGetter = new TokenGetter(config);
   const account = config.accounts[args.account];
   const idpEntryUrl = account.idpEntryUrl ? account.idpEntryUrl : config.idpEntryUrl;
+  account.name = args.account;
 
   const samlAssertion = yield provider.login(idpEntryUrl, args.username, args.password, args.otp);
   const role = yield selectRole(samlAssertion, args.role);
