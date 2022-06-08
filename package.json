@@ -1,6 +1,6 @@
 {
   "name": "@earnest/aws-sts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generation of AWS STS tokens via SAML authentication.",
   "main": "src/index.js",
   "engines": {
