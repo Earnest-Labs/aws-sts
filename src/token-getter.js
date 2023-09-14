@@ -1,12 +1,12 @@
 'use strict';
-const AWS = require('aws-sdk');
+const { STSClient, AssumeRoleWithSAMLCommand, AssumeRoleCommand  } = require("@aws-sdk/client-sts");
 const clui = require('clui');
 
 // Not thread safe!
 class TokenGetter {
   constructor(config) {
     this.spinner = new clui.Spinner('Getting token...');
-    this.sts = new AWS.STS({region: config.region});
+    this.sts = new STSClient({region: config.region});
     this.defaultAccount = config.defaultAccount;
   }
 
@@ -46,26 +46,28 @@ class TokenGetter {
   }
 
   async getSTSToken() {
-    const request = this.sts.assumeRoleWithSAML({
+    const command = new AssumeRoleWithSAMLCommand({
       PrincipalArn: this.role.principalArn,
       RoleArn: this.role.roleArn,
       SAMLAssertion: this.samlAssertion
     });
-    return await request.promise();
+    return await this.sts.send(command);
   }
 
   async getAssumeRoleToken(originalToken) {
-    this.sts.config.credentials = new AWS.Credentials(
-      originalToken.Credentials.AccessKeyId,
-      originalToken.Credentials.SecretAccessKey,
-      originalToken.Credentials.SessionToken);
+    this.sts.config.credentials = {
+      accessKeyId: originalToken.Credentials.AccessKeyId,
+      secretAccessKey: originalToken.Credentials.SecretAccessKey,
+      sessionToken: originalToken.Credentials.SessionToken
+    };
     const roleArn = this.role.roleArn.replace(/::(\d+)/, `::${this.accountNumber}`);
     const splitArn = originalToken.AssumedRoleUser.Arn.split('/');
 
-    return await this.sts.assumeRole({
+    const command = new AssumeRoleCommand({
       RoleArn: roleArn,
       RoleSessionName: splitArn[splitArn.length - 1]
-    }).promise();
+    });
+    return await this.sts.send(command);
   }
 }
 

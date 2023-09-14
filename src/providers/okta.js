@@ -59,6 +59,8 @@ const Okta = {
       .type('input[name="username"]', username)
       .click('input[type="submit"]') // Submit form
       .wait('.o-form-input-name-password')
+      .wait('input[type="submit"]') // Form is loaded via AJAX
+      .wait(300)
       .type('input[name="password"]', password)
       .click('input[type="submit"]') // Submit form
       .wait('.o-form-has-errors, .mfa-verify') // Wait for error or success

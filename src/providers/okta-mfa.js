@@ -4,6 +4,7 @@ const clui = require('clui');
 const OktaHelpers = require('./okta-helpers');
 
 const GoogleAuthenticator = {
+  name: "GoogleAuthenticator",
   detect: function *(nightmare) {
     return yield nightmare.visible('.mfa-verify-totp');
   },
@@ -41,6 +42,8 @@ const GoogleAuthenticator = {
 };
 
 const OktaVerify = {
+  name: "OktaVerify",
+
   detect: function *(nightmare) {
     return yield nightmare.visible('.mfa-verify-push');
   },
