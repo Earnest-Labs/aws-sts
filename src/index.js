@@ -87,7 +87,7 @@ function parseArgs(providerName) {
 }
 
 function *selectRole(samlAssertion, roleName) {
-  let buf = new Buffer(samlAssertion, 'base64');
+  let buf = Buffer.alloc(samlAssertion.length, samlAssertion, 'base64');
   let saml = yield thunkify(xml2js.parseString)(
     buf,
     {tagNameProcessors: [xml2js.processors.stripPrefix], xmlns: true});
