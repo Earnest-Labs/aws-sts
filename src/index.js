@@ -25,12 +25,13 @@ co(function *() {
   const args = parseArgs(provider.name);
   const tokenGetter = new TokenGetter(config);
   const account = config.accounts[args.account];
-  const idpEntryUrl = account.idpEntryUrl ? account.idpEntryUrl : config.idpEntryUrl;
+  const durationSeconds = args.durationSeconds;
+  const idpEntryUrl = (account && account.idpEntryUrl) ? account.idpEntryUrl : config.idpEntryUrl;
   account.name = args.account;
 
   const samlAssertion = yield provider.login(idpEntryUrl, args.username, args.password, args.otp);
-  const role = yield selectRole(samlAssertion, args.role);
-  const token = yield tokenGetter.getToken(samlAssertion, account, role);
+  const role = yield selectRole(samlAssertion, args.role, account);
+  const token = yield tokenGetter.getToken(samlAssertion, account, role, durationSeconds);
   const profileName = buildProfileName(role, account.name, args.profile);
   yield writeTokenToConfig(token, profileName);
 
@@ -83,10 +84,13 @@ function parseArgs(providerName) {
     help: 'Profile name that the AWS credentials should be saved as. ' +
     'Defaults to the name of the account specified.'
   });
+  parser.addArgument(['--durationSeconds'], {
+    help: 'Duration of the session, in seconds.'
+  });
   return parser.parseArgs();
 }
 
-function *selectRole(samlAssertion, roleName) {
+function *selectRole(samlAssertion, roleName, account) {
   let buf = new Buffer(samlAssertion, 'base64');
   let saml = yield thunkify(xml2js.parseString)(
     buf,
@@ -115,29 +119,31 @@ function *selectRole(samlAssertion, roleName) {
   });
   let multipleAccounts = accountIds.length > 1;
 
-  // Set the default role if one was passed
-  let role = roles.find(r => r.name === roleName);
+  // Multiple accounts may have this role name! 
+  // Make sure that there is only one role/account
+  // pair matching this name
+  let role = roles.find(r => r.name === roleName && r.accountId === account.accountNumber);
+
   if (!role) {
     role = roles[0]; // Couldn't find that role, default to the first one
-  }
+    if (roles.length > 1) {
+      let ci = new coinquirer();
+      role = yield ci.prompt({
+        type: 'list',
+        message: 'Please select a role:',
+        choices: roles.map(r => {
+          let name = r.name;
+          if (multipleAccounts) {
+            name += ' (' + r.accountId + ')';
+          }
 
-  if (roles.length > 1 && !roleName) {
-    let ci = new coinquirer();
-    role = yield ci.prompt({
-      type: 'list',
-      message: 'Please select a role:',
-      choices: roles.map(r => {
-        let name = r.name;
-        if (multipleAccounts) {
-          name += ' (' + r.accountId + ')';
-        }
-
-        return {
-          name: name,
-          value: r
-        };
-      })
-    });
+          return {
+            name: name,
+            value: r
+          };
+        })
+      });
+    }
   }
 
   return role;
