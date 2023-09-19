@@ -10,11 +10,12 @@ class TokenGetter {
     this.defaultAccount = config.defaultAccount;
   }
 
-  async getToken(samlAssertion, account, role) {
+  async getToken(samlAssertion, account, role, durationSeconds) {
     this.samlAssertion = samlAssertion;
     this.account = account;
     this.accountNumber = this.account.accountNumber;
     this.role = role;
+    this.durationSeconds = durationSeconds;
 
     try {
       this.spinner.start();
@@ -51,6 +52,10 @@ class TokenGetter {
       RoleArn: this.role.roleArn,
       SAMLAssertion: this.samlAssertion
     });
+    if (this.durationSeconds)
+    {
+      command.input.DurationSeconds = this.durationSeconds;
+    }
     return await this.sts.send(command);
   }
 
