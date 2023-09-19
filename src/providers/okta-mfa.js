@@ -45,7 +45,9 @@ const OktaVerify = {
   name: "OktaVerify",
 
   detect: function *(nightmare) {
-    return yield nightmare.visible('.mfa-verify-push');
+    return yield nightmare
+      .wait(500)
+      .visible('.mfa-verify-push');
   },
 
   prompt: function *() {

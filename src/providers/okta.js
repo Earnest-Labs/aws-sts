@@ -32,7 +32,7 @@ const Okta = {
       openDevTools: true,
       typeInterval: 5,
       pollInterval: 10,
-      waitTimeout: 30 * 1000
+      waitTimeout: 300 * 1000
     });
     let hasError = yield nightmare
       .on('console', function (type, message) {
@@ -55,14 +55,15 @@ const Okta = {
       .goto(idpEntryUrl)
       .visible('.primary-auth-form')
       .wait('input[type="submit"]') // Form is loaded via AJAX
-      .wait(300)
+      .wait(500)
       .type('input[name="username"]', username)
       .click('input[type="submit"]') // Submit form
       .wait('.o-form-input-name-password')
       .wait('input[type="submit"]') // Form is loaded via AJAX
-      .wait(300)
+      .wait(500)
       .type('input[name="password"]', password)
       .click('input[type="submit"]') // Submit form
+      .wait(1000) // wait for the MFA form (or an error) to render
       .wait('.o-form-has-errors, .mfa-verify') // Wait for error or success
       .exists('.o-form-has-errors');
     spinner.stop();
